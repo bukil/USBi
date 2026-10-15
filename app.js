@@ -654,12 +654,25 @@ function renderAllowlistTable() {
 
 async function handleGenerate() {
   const statusEl = document.getElementById("gen-status");
+  const publishStatusEl = document.getElementById("publish-status");
+  const tokenInput = document.getElementById("github-token");
   clearMessage(statusEl);
+  clearMessage(publishStatusEl);
 
   const quantityEl = document.getElementById("qty");
   const qty = parseInt(quantityEl.value, 10);
   if (!Number.isFinite(qty) || qty < 1 || qty > 100) {
     showMessage(statusEl, "Quantity must be between 1 and 100.", true);
+    return;
+  }
+
+  if (!tokenInput.value.trim()) {
+    showMessage(
+      statusEl,
+      "Enter a fine-grained GitHub token first. A key is shown only after it is active.",
+      true
+    );
+    tokenInput.focus();
     return;
   }
 
@@ -672,30 +685,19 @@ async function handleGenerate() {
 
   const genBtn = document.getElementById("gen-btn");
   genBtn.disabled = true;
-  genBtn.textContent = "Generating…";
+  genBtn.textContent = "Creating & activating…";
 
   try {
     const newSessionEntries = [];
     const newAllowlistEntries = [];
 
     for (let i = 0; i < qty; i++) {
-      const rawKey = generateRawKey();
-      const formatted = formatKey(rawKey);
-      const norm = normaliseKey(formatted);
-      const hash = await sha256Hex(norm);
-
-      // Collision check (astronomically unlikely but handle it)
-      if (existingHashes.has(hash)) {
-        // Try once more
-        const rawKey2 = generateRawKey();
-        const formatted2 = formatKey(rawKey2);
-        const norm2 = normaliseKey(formatted2);
-        const hash2 = await sha256Hex(norm2);
-        if (existingHashes.has(hash2)) {
-          showMessage(statusEl, "Hash collision detected (extremely rare). Please try again.", true);
-          return;
-        }
-      }
+      let formatted;
+      let hash;
+      do {
+        formatted = formatKey(generateRawKey());
+        hash = await sha256Hex(normaliseKey(formatted));
+      } while (existingHashes.has(hash));
 
       existingHashes.add(hash);
 
@@ -720,23 +722,35 @@ async function handleGenerate() {
       });
     }
 
-    session.push(...newSessionEntries);
+    // Treat generation and publishing as one transaction. Plaintext keys are
+    // not revealed until GitHub confirms that their hashes were committed.
+    const allowlistBeforeGeneration = allowlist.map((entry) => ({ ...entry }));
     mergeIntoAllowlist(newAllowlistEntries);
-
-    renderResultsTable();
     renderAllowlistTable();
+
+    const published = await handlePublish();
+    if (!published) {
+      allowlist = allowlistBeforeGeneration;
+      renderAllowlistTable();
+      showMessage(
+        statusEl,
+        "No key was created. Activation failed, so the pending key was discarded safely.",
+        true
+      );
+      return;
+    }
+
+    session.push(...newSessionEntries);
+    renderResultsTable();
     showMessage(
       statusEl,
-      `${qty} key${qty > 1 ? "s" : ""} generated. Save the private key${qty > 1 ? "s" : ""} before leaving this page.`
+      `${qty} key${qty > 1 ? "s are" : " is"} active and ready to use. Save the private key${qty > 1 ? "s" : ""} before leaving this page.`
     );
-    if (document.getElementById("auto-publish").checked) {
-      await handlePublish();
-    }
   } catch (err) {
     showMessage(statusEl, `Error: ${err.message}`, true);
   } finally {
     genBtn.disabled = false;
-    genBtn.textContent = "Generate";
+    genBtn.textContent = "Generate & Activate";
   }
 }
 

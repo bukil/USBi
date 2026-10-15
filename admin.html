@@ -53,7 +53,7 @@
             <input id="reference" name="reference" type="text" maxlength="200" autocomplete="off">
           </div>
         </div>
-        <div class="action-row"><button class="button button-primary" id="gen-btn" type="submit">Generate Licenses</button></div>
+        <div class="action-row"><button class="button button-primary" id="gen-btn" type="submit">Generate &amp; Activate</button></div>
       </form>
       <div id="gen-status" class="message" role="status" aria-live="polite" hidden></div>
     </section>
@@ -63,15 +63,11 @@
         <div><p class="eyebrow">Publish</p><h2 id="publish-heading">GitHub repository</h2></div>
         <span class="privacy-chip">Token never saved</span>
       </div>
-      <p class="section-copy">Use a fine-grained token restricted to <code>bukil/USBi</code> with <strong>Contents: Read and write</strong>.</p>
+      <p class="section-copy">A token is required to create a license. The key is revealed only after its hash is committed, so it works in the app immediately without a manual repository update. Use a fine-grained token restricted to <code>bukil/USBi</code> with <strong>Contents: Read and write</strong>.</p>
       <div class="form-grid publish-grid">
         <div class="field">
           <label for="github-token">Fine-grained GitHub token</label>
           <input id="github-token" name="githubToken" type="password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="github_pat_…">
-        </div>
-        <div class="field checkbox-field">
-          <span class="field-label">Automation</span>
-          <label class="checkbox-label" for="auto-publish"><input id="auto-publish" type="checkbox" checked> Publish after generation</label>
         </div>
       </div>
       <div class="action-row">

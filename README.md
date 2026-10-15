@@ -10,8 +10,8 @@ EJEC uses a **hash-only** licensing model:
 
 1. The admin generates a cryptographically random 25-character product key in the browser.
 2. The browser computes the **SHA-256 hash** of the normalised key (uppercase, no hyphens).
-3. Only the **hash** is saved to `licenses.json` — the plaintext key is shown once in the browser and then discarded.
-4. The admin commits the updated `licenses.json` to GitHub and GitHub Pages publishes it.
+3. The admin page commits only the **hash** to `licenses.json` through GitHub's API.
+4. The plaintext key is revealed only after GitHub confirms the commit, so every displayed key is already active.
 5. When a customer enters their key in the EJEC app, the app normalises it, hashes it, downloads `licenses.json`, and checks whether a matching hash with `"status": "active"` exists.
 
 ---
@@ -42,9 +42,9 @@ GitHub Pages is a **public, read-only** static host. There is no server-side sec
 
 1. Open `admin.html` in a modern browser (locally or via your GitHub Pages URL). The console loads the latest committed `licenses.json` directly from GitHub before enabling generation.
 2. Enter a quantity (1–100), and optionally fill in customer name, email, and reference.
-3. Enter a fine-grained GitHub token with `Contents: Read and write` access to `bukil/USBi` if you want the site to publish automatically.
-4. Click **Generate**. With automatic publishing enabled, the updated hash allowlist is committed directly to GitHub.
-5. Each key is displayed once in the **Session Results** table.
+3. Enter a fine-grained GitHub token with `Contents: Read and write` access to `bukil/USBi`.
+4. Click **Generate & Activate**. The updated hash allowlist is committed directly to GitHub.
+5. Each key is displayed once in the **Session Results** table only after that commit succeeds. If publishing fails, the pending key is discarded and never shown.
 6. Click **Download Private CSV** to save the plaintext keys.
 7. The manual **Download Updated licenses.json** option remains available as a fallback.
 
@@ -63,8 +63,8 @@ If the published allowlist cannot be loaded, generation remains disabled to prev
 1. Create a fine-grained GitHub personal access token restricted to the `bukil/USBi` repository.
 2. Grant only `Contents: Read and write` repository permission.
 3. Enter the token in the generator's **Publish to GitHub** section.
-4. Leave **Publish automatically after generating** enabled and generate the license.
-5. The site fetches the latest allowlist, merges the new hashes, and commits `licenses.json` directly through GitHub's repository contents API.
+4. Click **Generate & Activate**.
+5. The site fetches the latest allowlist, merges the new hashes, and commits `licenses.json` directly through GitHub's repository contents API before revealing the key.
 
 The token is not saved to browser storage and is cleared from the page after every publishing attempt. Revoke and replace the token immediately if you believe it has been exposed.
 
@@ -81,7 +81,7 @@ The token is not saved to browser storage and is cleared from the page after eve
 4. GitHub Pages will publish the update automatically (usually within 30–60 seconds).
 5. Send only the **plaintext product key** to the customer — never share the CSV or the hash.
 
-Generating a key **does not** activate it. The key only becomes valid after its hash is live in `licenses.json`.
+The admin page never reveals an unactivated key. A generated key appears only after its hash is live in `licenses.json`.
 
 ---
 
