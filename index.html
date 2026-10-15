@@ -19,7 +19,7 @@
                  style-src 'self';
                  img-src 'self' data:;
                  font-src 'none';
-                 connect-src 'self';
+                 connect-src 'self' https://api.github.com;
                  form-action 'none';
                  frame-ancestors 'none';
                  base-uri 'self';" />
@@ -140,6 +140,60 @@
       ></div>
 
     </div><!-- /.card-body -->
+  </section>
+
+  <!-- ======================================================================
+       GitHub publishing
+       ====================================================================== -->
+  <section class="card scroll-anchor" id="section-publish" aria-labelledby="publish-heading">
+    <div class="card-header">
+      <span class="section-icon" aria-hidden="true">🚀</span>
+      <h2 id="publish-heading">Publish to GitHub</h2>
+    </div>
+    <div class="card-body">
+      <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-md);">
+        Use a fine-grained GitHub token with <strong>Contents: Read and write</strong>
+        access to <code>bukil/USBi</code>. The token stays in this browser tab,
+        is never saved, and is cleared after each publishing attempt.
+      </p>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="github-token">Fine-grained GitHub token</label>
+          <input
+            type="password"
+            id="github-token"
+            name="github-token"
+            placeholder="github_pat_…"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="auto-publish">Publishing behavior</label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="auto-publish" checked />
+            Publish automatically after generating
+          </label>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="publish-btn" type="button">
+          Publish Current Allowlist
+        </button>
+        <a
+          class="btn btn-secondary"
+          href="https://github.com/settings/personal-access-tokens/new"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Create GitHub Token</a>
+      </div>
+
+      <div id="publish-status" role="status" aria-live="polite" class="msg" hidden></div>
+    </div>
   </section>
 
   <!-- ======================================================================

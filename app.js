@@ -24,6 +24,8 @@ const GROUP_SIZE = 5;           // characters per display group
 const GROUP_COUNT = 5;          // number of display groups
 const HASH_HEX_LENGTH = 64;     // SHA-256 → 32 bytes → 64 hex chars
 const MAX_IMPORT_BYTES = 1_048_576; // 1 MiB
+const GITHUB_CONTENTS_URL = "https://api.github.com/repos/bukil/USBi/contents/licenses.json";
+const GITHUB_BRANCH = "main";
 
 // ---------------------------------------------------------------------------
 // In-memory session state
@@ -219,6 +221,52 @@ function mergeIntoAllowlist(newEntries) {
   }
 }
 
+// Load the currently published allowlist before permitting new generation.
+// This prevents a newly downloaded licenses.json from accidentally dropping
+// licenses that were already published.
+async function loadPublishedAllowlist() {
+  if (typeof location === "undefined" || location.protocol === "file:") return;
+
+  const generateButton = document.getElementById("gen-btn");
+  const statusElement = document.getElementById("import-status");
+  generateButton.disabled = true;
+  generateButton.textContent = "Loading licenses…";
+
+  try {
+    const response = await fetch("./licenses.json", {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(`licenses.json returned HTTP ${response.status}.`);
+    }
+
+    const text = await response.text();
+    if (new TextEncoder().encode(text).byteLength > MAX_IMPORT_BYTES) {
+      throw new Error("licenses.json is larger than 1 MiB.");
+    }
+
+    const result = validateLicensesJson(text);
+    if (!result.ok) throw new Error(result.error);
+
+    mergeIntoAllowlist(result.data.licenses);
+    renderAllowlistTable();
+    showMessage(
+      statusElement,
+      `Loaded ${result.data.licenses.length} published license${result.data.licenses.length === 1 ? "" : "s"}.`
+    );
+    generateButton.disabled = false;
+    generateButton.textContent = "Generate";
+  } catch (error) {
+    showMessage(
+      statusElement,
+      `Could not load the published allowlist: ${error.message} Generation is disabled to protect existing licenses.`,
+      true
+    );
+    generateButton.textContent = "Allowlist unavailable";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // DOM utilities (safe — never use innerHTML with user data)
 // ---------------------------------------------------------------------------
@@ -326,6 +374,112 @@ function assertNoPlaintext(json) {
     if (json.includes(s.key)) {
       throw new Error("SECURITY: plaintext key found in export — aborting.");
     }
+  }
+}
+
+function decodeGitHubContent(value) {
+  const binary = atob(value.replace(/\s/g, ""));
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function encodeGitHubContent(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+  return btoa(binary);
+}
+
+async function githubRequest(url, token, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    cache: "no-store",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      ...(options.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    let message = `GitHub returned HTTP ${response.status}.`;
+    try {
+      const body = await response.json();
+      if (typeof body.message === "string") message = body.message;
+    } catch {
+      // Keep the generic HTTP error when GitHub does not return JSON.
+    }
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+async function handlePublish() {
+  const tokenInput = document.getElementById("github-token");
+  const statusElement = document.getElementById("publish-status");
+  const publishButton = document.getElementById("publish-btn");
+  const token = tokenInput.value.trim();
+
+  clearMessage(statusElement);
+  if (!token) {
+    showMessage(statusElement, "Enter a fine-grained GitHub token before publishing.", true);
+    tokenInput.focus();
+    return false;
+  }
+  if (allowlist.length === 0) {
+    showMessage(statusElement, "There are no licenses to publish.", true);
+    return false;
+  }
+
+  publishButton.disabled = true;
+  publishButton.textContent = "Publishing…";
+
+  try {
+    const currentFile = await githubRequest(
+      `${GITHUB_CONTENTS_URL}?ref=${encodeURIComponent(GITHUB_BRANCH)}`,
+      token
+    );
+    if (currentFile.encoding !== "base64" || typeof currentFile.content !== "string") {
+      throw new Error("GitHub returned an unsupported licenses.json representation.");
+    }
+
+    const currentAllowlist = validateLicensesJson(decodeGitHubContent(currentFile.content));
+    if (!currentAllowlist.ok) {
+      throw new Error(`Published licenses.json is invalid: ${currentAllowlist.error}`);
+    }
+    mergeIntoAllowlist(currentAllowlist.data.licenses);
+
+    const json = buildLicensesJson();
+    assertNoPlaintext(json);
+    await githubRequest(GITHUB_CONTENTS_URL, token, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: `Update EJEC licenses (${new Date().toISOString()})`,
+        content: encodeGitHubContent(json),
+        sha: currentFile.sha,
+        branch: GITHUB_BRANCH,
+      }),
+    });
+
+    renderAllowlistTable();
+    showMessage(
+      statusElement,
+      "Published successfully. GitHub Pages should update within a few minutes."
+    );
+    return true;
+  } catch (error) {
+    showMessage(statusElement, `Publishing failed: ${error.message}`, true);
+    return false;
+  } finally {
+    tokenInput.value = "";
+    publishButton.disabled = false;
+    publishButton.textContent = "Publish Current Allowlist";
   }
 }
 
@@ -570,8 +724,11 @@ async function handleGenerate() {
     renderAllowlistTable();
     showMessage(
       statusEl,
-      `${qty} key${qty > 1 ? "s" : ""} generated. Download the CSV and licenses.json, then commit the JSON.`
+      `${qty} key${qty > 1 ? "s" : ""} generated. Save the private key${qty > 1 ? "s" : ""} before leaving this page.`
     );
+    if (document.getElementById("auto-publish").checked) {
+      await handlePublish();
+    }
   } catch (err) {
     showMessage(statusEl, `Error: ${err.message}`, true);
   } finally {
@@ -679,6 +836,9 @@ function init() {
   // Generate button
   document.getElementById("gen-btn").addEventListener("click", handleGenerate);
 
+  // Publish directly through GitHub's repository contents API.
+  document.getElementById("publish-btn").addEventListener("click", handlePublish);
+
   // Enter key on form fields triggers generate
   ["qty", "customer-name", "customer-email", "reference"].forEach((id) => {
     document.getElementById(id).addEventListener("keydown", (e) => {
@@ -739,6 +899,7 @@ function init() {
   // Initial renders
   renderResultsTable();
   renderAllowlistTable();
+  void loadPublishedAllowlist();
 }
 
 // Run after DOM is ready

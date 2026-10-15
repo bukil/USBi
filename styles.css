@@ -264,6 +264,22 @@ body {
   box-shadow: 0 0 0 3px var(--accent-muted);
 }
 
+.form-group .checkbox-label {
+  min-height: 38px;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.form-group input[type="checkbox"] {
+  appearance: auto;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
 input[type="number"] { -moz-appearance: textfield; }
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }

@@ -40,18 +40,35 @@ GitHub Pages is a **public, read-only** static host. There is no server-side sec
 
 ## How to generate licenses
 
-1. Open `index.html` in a modern browser (locally or via your GitHub Pages URL).
+1. Open `index.html` in a modern browser (locally or via your GitHub Pages URL). On GitHub Pages, the generator automatically loads the published `licenses.json` before enabling generation.
 2. Enter a quantity (1–100), and optionally fill in customer name, email, and reference.
-3. Click **Generate**.
-4. Each key is displayed once in the **Session Results** table.
-5. Click **Download Private CSV** to save the plaintext keys.
-6. Click **Download Updated licenses.json** to get the updated hash file.
+3. Enter a fine-grained GitHub token with `Contents: Read and write` access to `bukil/USBi` if you want the site to publish automatically.
+4. Click **Generate**. With automatic publishing enabled, the updated hash allowlist is committed directly to GitHub.
+5. Each key is displayed once in the **Session Results** table.
+6. Click **Download Private CSV** to save the plaintext keys.
+7. The manual **Download Updated licenses.json** option remains available as a fallback.
+
+The token is held only in the password field, is never persisted, and is cleared after every publishing attempt. Use a fine-grained token restricted to the `bukil/USBi` repository with only `Contents: Read and write` permission.
+
+If the published allowlist cannot be loaded, generation remains disabled to prevent accidentally overwriting existing licenses. When running locally with `file://`, import the current `licenses.json` manually before generating keys.
 
 > ⚠️ **If you close the browser or clear results without downloading the CSV, the plaintext keys are permanently lost.** They are never stored in `localStorage`, cookies, or any file.
 
 ---
 
 ## How to publish `licenses.json`
+
+### Automatic publishing
+
+1. Create a fine-grained GitHub personal access token restricted to the `bukil/USBi` repository.
+2. Grant only `Contents: Read and write` repository permission.
+3. Enter the token in the generator's **Publish to GitHub** section.
+4. Leave **Publish automatically after generating** enabled and generate the license.
+5. The site fetches the latest allowlist, merges the new hashes, and commits `licenses.json` directly through GitHub's repository contents API.
+
+The token is not saved to browser storage and is cleared from the page after every publishing attempt. Revoke and replace the token immediately if you believe it has been exposed.
+
+### Manual fallback
 
 1. Download the updated `licenses.json` from the website.
 2. Replace the existing `licenses.json` in your GitHub repository root.

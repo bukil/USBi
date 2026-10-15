@@ -1,4 +1,13 @@
 {
   "version": 1,
-  "licenses": []
+  "licenses": [
+    {
+      "hash": "8fc998e8d835aa303b06444a18c60088cdd21cd7f3b79c1d8a0fc0a8b9c83cf3",
+      "status": "active",
+      "createdAt": "2026-10-15T13:26:22+05:30",
+      "customerName": "Mukil",
+      "customerEmail": "mukil@gmail.com",
+      "reference": "initial-license"
+    }
+  ]
 }
