@@ -1,401 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-        content="Generate and manage SHA-256-hashed license keys for the EJEC macOS application. No server required — runs entirely in your browser." />
-  <meta name="robots" content="noindex, nofollow" />
-
-  <!-- Strict Content Security Policy:
-       - No inline event handlers (all listeners added via JS).
-       - No external scripts, styles, fonts, or images.
-       - No form submissions to third-party URLs.
-       - connect-src 'self' allows fetching ./licenses.json from same origin only.
-  -->
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self';
-                 script-src 'self';
-                 style-src 'self';
-                 img-src 'self' data:;
-                 font-src 'none';
-                 connect-src 'self' https://api.github.com;
-                 form-action 'none';
-                 frame-ancestors 'none';
-                 base-uri 'self';" />
-
-  <title>EJEC License Generator</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Verify an EJEC product key securely.">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <title>Verify License | EJEC</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-<div class="page-wrapper">
-
-  <!-- ======================================================================
-       Header
-       ====================================================================== -->
-  <header class="site-header" role="banner">
-    <div class="app-icon" aria-hidden="true">
-      <svg width="34" height="34" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
-        <path d="M17 3C9.268 3 3 9.268 3 17s6.268 14 14 14 14-6.268 14-14S24.732 3 17 3zm0 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 8h12a1 1 0 0 1 0 2h-1v7a1 1 0 0 1-2 0v-7h-6v7a1 1 0 0 1-2 0v-7h-1a1 1 0 0 1 0-2z"/>
-      </svg>
-    </div>
-    <h1>EJEC License Generator</h1>
-    <p class="subtitle">Cryptographically secure · Dependency-free · GitHub Pages</p>
+<body class="customer-page">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="global-header">
+    <a class="brand" href="./" aria-label="EJEC home">
+      <span class="brand-mark" aria-hidden="true">E</span>
+      <span>EJEC</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="admin.html">Admin</a>
+    </nav>
   </header>
 
-  <!-- ======================================================================
-       Security / Public-access notice
-       ====================================================================== -->
-  <div class="security-notice" role="note" aria-label="Security notice">
-    <span class="notice-icon" aria-hidden="true">⚠️</span>
-    <p>
-      <strong>This page is publicly accessible.</strong>
-      It contains no secrets. Only SHA-256 hashes are stored in
-      <code>licenses.json</code> — never plaintext keys.
-      A generated key is <strong>not active</strong> until its hash is committed
-      to the repository and published via GitHub Pages.
-    </p>
-  </div>
+  <main id="main-content" class="customer-main" tabindex="-1">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-symbol" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="44" height="44">
+          <path d="M29.5 7.5a10 10 0 1 0-7.1 17.1L15 32v5h5v5h5v-5l5-5-3.4-3.4 3.8-3.8A10 10 0 0 0 29.5 7.5Zm0 6a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/>
+        </svg>
+      </div>
+      <p class="eyebrow">EJEC for Mac</p>
+      <h1 id="page-title">Verify your license.</h1>
+      <p class="hero-copy">Check whether an EJEC product key is active before entering it in the app.</p>
+    </section>
 
-  <!-- ======================================================================
-       Section 1 — Generate licenses
-       ====================================================================== -->
-  <section class="card scroll-anchor" id="section-generate" aria-labelledby="gen-heading">
-    <div class="card-header">
-      <span class="section-icon" aria-hidden="true">🔑</span>
-      <h2 id="gen-heading">Generate Licenses</h2>
-    </div>
-    <div class="card-body">
-
-      <div class="form-grid">
-        <!-- Quantity -->
-        <div class="form-group">
-          <label for="qty">Quantity <span aria-hidden="true">(1 – 100)</span></label>
-          <input
-            type="number"
-            id="qty"
-            name="qty"
-            min="1"
-            max="100"
-            value="1"
-            aria-describedby="qty-hint"
-            autocomplete="off"
-          />
-          <span id="qty-hint" class="visually-hidden">Enter a number from 1 to 100</span>
+    <section class="surface verification-surface" aria-labelledby="verify-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">License status</p>
+          <h2 id="verify-heading">Product key</h2>
         </div>
-
-        <!-- Customer name -->
-        <div class="form-group">
-          <label for="customer-name">Customer Name <span style="font-weight:400;opacity:.7">(optional)</span></label>
-          <input
-            type="text"
-            id="customer-name"
-            name="customer-name"
-            placeholder="Acme Corp"
-            maxlength="200"
-            autocomplete="name"
-          />
-        </div>
-
-        <!-- Customer email -->
-        <div class="form-group">
-          <label for="customer-email">Customer Email <span style="font-weight:400;opacity:.7">(optional)</span></label>
-          <input
-            type="email"
-            id="customer-email"
-            name="customer-email"
-            placeholder="alice@example.com"
-            maxlength="200"
-            autocomplete="email"
-          />
-        </div>
-
-        <!-- Reference -->
-        <div class="form-group">
-          <label for="reference">Internal Reference <span style="font-weight:400;opacity:.7">(optional)</span></label>
-          <input
-            type="text"
-            id="reference"
-            name="reference"
-            placeholder="ORDER-1042"
-            maxlength="200"
-            autocomplete="off"
-          />
-        </div>
-      </div><!-- /.form-grid -->
-
-      <div class="btn-row">
-        <button class="btn btn-primary" id="gen-btn" type="button">
-          Generate
-        </button>
+        <span class="privacy-chip">Private by design</span>
       </div>
 
-      <!-- Status for generation -->
-      <div
-        id="gen-status"
-        role="status"
-        aria-live="polite"
-        class="msg"
-        hidden
-      ></div>
-
-    </div><!-- /.card-body -->
-  </section>
-
-  <!-- ======================================================================
-       GitHub publishing
-       ====================================================================== -->
-  <section class="card scroll-anchor" id="section-publish" aria-labelledby="publish-heading">
-    <div class="card-header">
-      <span class="section-icon" aria-hidden="true">🚀</span>
-      <h2 id="publish-heading">Publish to GitHub</h2>
-    </div>
-    <div class="card-body">
-      <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-md);">
-        Use a fine-grained GitHub token with <strong>Contents: Read and write</strong>
-        access to <code>bukil/USBi</code>. The token stays in this browser tab,
-        is never saved, and is cleared after each publishing attempt.
-      </p>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="github-token">Fine-grained GitHub token</label>
+      <form id="verify-form" novalidate>
+        <div class="field">
+          <label for="license-key">EJEC product key</label>
+          <p class="field-hint" id="license-key-hint">Enter the five groups exactly as provided. Your key is hashed locally and is never uploaded.</p>
           <input
-            type="password"
-            id="github-token"
-            name="github-token"
-            placeholder="github_pat_…"
+            id="license-key"
+            name="licenseKey"
+            type="text"
+            required
+            minlength="25"
+            maxlength="40"
             autocomplete="off"
-            autocapitalize="none"
+            autocapitalize="characters"
+            autocorrect="off"
             spellcheck="false"
-          />
+            enterkeyhint="done"
+            placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+            aria-describedby="license-key-hint license-key-error"
+          >
+          <p class="field-error" id="license-key-error" hidden>Enter a complete 25-character EJEC product key.</p>
         </div>
+        <button class="button button-primary button-full" id="verify-button" type="submit">Verify License</button>
+      </form>
 
-        <div class="form-group">
-          <label for="auto-publish">Publishing behavior</label>
-          <label class="checkbox-label">
-            <input type="checkbox" id="auto-publish" checked />
-            Publish automatically after generating
-          </label>
+      <div id="verification-result" class="verification-result" aria-live="polite" aria-atomic="true" hidden>
+        <span class="result-icon" aria-hidden="true"></span>
+        <div>
+          <h3 id="result-title"></h3>
+          <p id="result-message"></p>
         </div>
       </div>
+    </section>
 
-      <div class="btn-row">
-        <button class="btn btn-primary" id="publish-btn" type="button">
-          Publish Current Allowlist
-        </button>
-        <a
-          class="btn btn-secondary"
-          href="https://github.com/settings/personal-access-tokens/new"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Create GitHub Token</a>
-      </div>
+    <p class="privacy-note">Verification uses a one-way SHA-256 fingerprint. The product key stays on this device.</p>
+  </main>
 
-      <div id="publish-status" role="status" aria-live="polite" class="msg" hidden></div>
-    </div>
-  </section>
-
-  <!-- ======================================================================
-       Section 2 — Results (generated this session)
-       ====================================================================== -->
-  <section class="card scroll-anchor" id="section-results" aria-labelledby="results-heading">
-    <div class="card-header">
-      <span class="section-icon" aria-hidden="true">📋</span>
-      <h2 id="results-heading">Session Results</h2>
-    </div>
-    <div class="card-body">
-
-      <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-md);">
-        Plaintext keys are shown <strong>once</strong> per session and exist only in memory.
-        Download the private CSV before clearing results.
-      </p>
-
-      <div class="table-scroll">
-        <table aria-label="Generated license keys for this session">
-          <thead>
-            <tr>
-              <th scope="col">Product Key</th>
-              <th scope="col">Hash (first 12 chars)</th>
-              <th scope="col">Customer</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="results-tbody">
-            <!-- Populated by app.js -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Bulk actions (hidden until keys exist) -->
-      <div class="btn-row" id="bulk-actions" hidden>
-        <button class="btn btn-secondary" id="copy-all-btn" type="button">
-          Copy All Keys
-        </button>
-        <button class="btn btn-secondary" id="download-csv-btn" type="button">
-          ⬇ Download Private CSV
-        </button>
-        <button class="btn btn-secondary" id="download-json-btn" type="button">
-          ⬇ Download Updated licenses.json
-        </button>
-        <button class="btn btn-danger-outline" id="clear-btn" type="button">
-          Clear Results
-        </button>
-      </div>
-
-      <!-- CSV security warning -->
-      <div class="csv-warning" role="note">
-        <span aria-hidden="true">🔒</span>
-        <span>
-          The private CSV contains <strong>plaintext license keys</strong>.
-          Store it securely and <strong>never commit it</strong> to the public repository.
-        </span>
-      </div>
-
-    </div><!-- /.card-body -->
-  </section>
-
-  <!-- ======================================================================
-       Section 3 — Import existing licenses.json
-       ====================================================================== -->
-  <section class="card scroll-anchor" id="section-import" aria-labelledby="import-heading">
-    <div class="card-header">
-      <span class="section-icon" aria-hidden="true">📂</span>
-      <h2 id="import-heading">Import Existing licenses.json</h2>
-    </div>
-    <div class="card-body">
-
-      <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-md);">
-        Import an existing <code>licenses.json</code> to preserve its entries when generating
-        new keys. Duplicate hashes are automatically skipped. Maximum file size: 1 MiB.
-      </p>
-
-      <div
-        class="import-zone"
-        id="import-zone"
-        role="button"
-        tabindex="0"
-        aria-label="Click or drop a licenses.json file here to import"
-      >
-        <span class="zone-icon" aria-hidden="true">📄</span>
-        <p><strong>Click to browse</strong> or drag and drop</p>
-        <p style="font-size:var(--font-size-xs);">licenses.json · max 1 MiB</p>
-      </div>
-
-      <!-- Hidden file input — triggered by the import-zone -->
-      <input
-        type="file"
-        id="import-file"
-        name="import-file"
-        accept=".json,application/json"
-        aria-hidden="true"
-        tabindex="-1"
-      />
-
-      <div
-        id="import-status"
-        role="status"
-        aria-live="polite"
-        class="msg"
-        hidden
-      ></div>
-
-    </div><!-- /.card-body -->
-  </section>
-
-  <!-- ======================================================================
-       Section 4 — License management table
-       ====================================================================== -->
-  <section class="card scroll-anchor" id="section-manage" aria-labelledby="manage-heading">
-    <div class="card-header">
-      <span class="section-icon" aria-hidden="true">🛡️</span>
-      <h2 id="manage-heading">License Management</h2>
-    </div>
-    <div class="card-body">
-
-      <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-md);">
-        Revoke or reactivate licenses. Changes apply only to the downloaded
-        <code>licenses.json</code>; commit the file to take effect.
-        Removing a row deletes it from the export permanently.
-      </p>
-
-      <div class="table-scroll">
-        <table aria-label="All licenses in the current allowlist">
-          <thead>
-            <tr>
-              <th scope="col">Hash</th>
-              <th scope="col">Status</th>
-              <th scope="col">Customer</th>
-              <th scope="col">Email</th>
-              <th scope="col">Reference</th>
-              <th scope="col">Created</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="allowlist-tbody">
-            <!-- Populated by app.js -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="btn-row" style="margin-top:var(--space-md);">
-        <button class="btn btn-secondary" id="download-json-btn-2" type="button">
-          ⬇ Download Updated licenses.json
-        </button>
-      </div>
-
-    </div><!-- /.card-body -->
-  </section>
-
-  <!-- ======================================================================
-       Section 5 — Publishing instructions
-       ====================================================================== -->
-  <section class="card scroll-anchor" id="section-instructions" aria-labelledby="instr-heading">
-    <div class="card-header">
-      <span class="section-icon" aria-hidden="true">📖</span>
-      <h2 id="instr-heading">How to Activate a License</h2>
-    </div>
-    <div class="card-body">
-
-      <ol class="instructions-list" aria-label="Step-by-step activation workflow">
-        <li><span><strong>Generate</strong> the license key above.</span></li>
-        <li><span><strong>Download and privately save</strong> the CSV file containing the plaintext key. Store it securely — never commit it to the repository.</span></li>
-        <li><span><strong>Download</strong> the updated <code>licenses.json</code> file.</span></li>
-        <li><span><strong>Replace</strong> <code>licenses.json</code> in your GitHub repository with the downloaded file.</span></li>
-        <li><span><strong>Commit and push</strong> the change to the default branch.</span></li>
-        <li><span><strong>Wait</strong> for GitHub Pages to publish the update (typically under 1 minute).</span></li>
-        <li><span><strong>Send only the plaintext license key</strong> to the customer. Never share the CSV or the hash.</span></li>
-      </ol>
-
-      <div class="info-box" role="note">
-        <strong>Important:</strong> Generating a key does <em>not</em> activate it.
-        The key only becomes valid after its hash is published in <code>licenses.json</code>
-        on GitHub Pages and the EJEC app downloads the updated file.
-        <br /><br />
-        <strong>Why only hashes?</strong> GitHub Pages is a public, read-only static host.
-        There is no server-side secret to sign keys, and no way to prevent anyone from
-        reading the repository. Publishing only SHA-256 hashes means an observer who reads
-        <code>licenses.json</code> cannot reconstruct any valid product key.
-      </div>
-
-    </div><!-- /.card-body -->
-  </section>
-
-  <!-- ======================================================================
-       Footer
-       ====================================================================== -->
-  <footer class="site-footer" role="contentinfo">
-    <p>
-      EJEC License Generator &middot;
-      Static · No server · No analytics · No external dependencies
-    </p>
-    <p style="margin-top:4px;">
-      <a href="tests/license-tests.html" style="color:var(--accent);">Run browser tests</a>
-    </p>
+  <footer class="site-footer">
+    <span>© 2026 EJEC</span>
+    <a href="admin.html">License administration</a>
   </footer>
-
-</div><!-- /.page-wrapper -->
-
-<script src="app.js"></script>
+  <script src="user.js"></script>
 </body>
 </html>

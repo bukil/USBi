@@ -233,9 +233,12 @@ async function loadPublishedAllowlist() {
   generateButton.textContent = "Loading licenses…";
 
   try {
-    const response = await fetch("./licenses.json", {
+    const response = await fetch(GITHUB_CONTENTS_URL, {
       cache: "no-store",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/vnd.github.raw+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
     });
     if (!response.ok) {
       throw new Error(`licenses.json returned HTTP ${response.status}.`);
@@ -289,7 +292,7 @@ function el(tag, opts = {}) {
 /** Display a transient status message in the given container. */
 function showMessage(container, text, isError = false) {
   container.textContent = text;
-  container.className = isError ? "msg msg-error" : "msg msg-success";
+  container.className = isError ? "message message-error" : "message message-success";
   container.removeAttribute("hidden");
   clearTimeout(container._timer);
   container._timer = setTimeout(() => {
@@ -833,18 +836,14 @@ function handleClearResults() {
 // ---------------------------------------------------------------------------
 
 function init() {
-  // Generate button
-  document.getElementById("gen-btn").addEventListener("click", handleGenerate);
+  // Generate form
+  document.getElementById("gen-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    handleGenerate();
+  });
 
   // Publish directly through GitHub's repository contents API.
   document.getElementById("publish-btn").addEventListener("click", handlePublish);
-
-  // Enter key on form fields triggers generate
-  ["qty", "customer-name", "customer-email", "reference"].forEach((id) => {
-    document.getElementById(id).addEventListener("keydown", (e) => {
-      if (e.key === "Enter") handleGenerate();
-    });
-  });
 
   // Copy All button
   document.getElementById("copy-all-btn").addEventListener("click", async (e) => {
@@ -886,16 +885,6 @@ function init() {
     const file = e.dataTransfer.files[0];
     if (file) handleImport(file);
   });
-  importZone.addEventListener("click", () => {
-    document.getElementById("import-file").click();
-  });
-  importZone.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      document.getElementById("import-file").click();
-    }
-  });
-
   // Initial renders
   renderResultsTable();
   renderAllowlistTable();

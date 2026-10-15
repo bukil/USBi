@@ -40,7 +40,7 @@ GitHub Pages is a **public, read-only** static host. There is no server-side sec
 
 ## How to generate licenses
 
-1. Open `index.html` in a modern browser (locally or via your GitHub Pages URL). On GitHub Pages, the generator automatically loads the published `licenses.json` before enabling generation.
+1. Open `admin.html` in a modern browser (locally or via your GitHub Pages URL). The console loads the latest committed `licenses.json` directly from GitHub before enabling generation.
 2. Enter a quantity (1–100), and optionally fill in customer name, email, and reference.
 3. Enter a fine-grained GitHub token with `Contents: Read and write` access to `bukil/USBi` if you want the site to publish automatically.
 4. Click **Generate**. With automatic publishing enabled, the updated hash allowlist is committed directly to GitHub.
@@ -87,7 +87,7 @@ Generating a key **does not** activate it. The key only becomes valid after its 
 
 ## How to revoke a license
 
-1. Open the generator page.
+1. Open `admin.html`.
 2. **Import** the current `licenses.json` via the Import section.
 3. In the **License Management** table, find the entry by customer name, email, or shortened hash.
 4. Click **Revoke**.
@@ -195,7 +195,9 @@ No build step, no Node.js, no npm — the tests run purely in the browser.
 
 | File | Purpose |
 |---|---|
-| `index.html` | Admin UI — generate, manage, and export licenses |
+| `index.html` | Customer-facing license verification page |
+| `admin.html` | Admin UI — generate, publish, manage, and export licenses |
+| `user.js` | Customer-side local hashing and license verification |
 | `styles.css` | macOS-inspired design system; full light/dark mode |
 | `app.js` | All cryptographic and UI logic; no dependencies |
 | `licenses.json` | SHA-256 hash allowlist committed to the repository |

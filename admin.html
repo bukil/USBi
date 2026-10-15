@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Generate and manage EJEC licenses.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <title>License Administration | EJEC</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="global-header">
+    <a class="brand" href="./" aria-label="EJEC home"><span class="brand-mark" aria-hidden="true">E</span><span>EJEC</span></a>
+    <nav aria-label="Primary"><a href="./">Verify license</a></nav>
+  </header>
+
+  <main id="main-content" class="admin-main" tabindex="-1">
+    <header class="admin-hero">
+      <div>
+        <p class="eyebrow">Private administration</p>
+        <h1>License Console</h1>
+        <p>Create, publish, and manage EJEC product keys from one place.</p>
+      </div>
+      <span class="status-pill"><span aria-hidden="true"></span> GitHub connected</span>
+    </header>
+
+    <div class="notice" role="note">
+      <strong>Keep plaintext keys private.</strong> Only SHA-256 hashes are published. Save the private CSV before closing this page.
+    </div>
+
+    <section class="surface" aria-labelledby="generate-heading">
+      <div class="section-heading"><div><p class="eyebrow">Create</p><h2 id="generate-heading">New licenses</h2></div></div>
+      <form id="gen-form">
+        <div class="form-grid">
+          <div class="field compact-field">
+            <label for="qty">Quantity</label>
+            <input id="qty" name="quantity" type="number" min="1" max="100" value="1" required>
+          </div>
+          <div class="field">
+            <label for="customer-name">Customer name <span>Optional</span></label>
+            <input id="customer-name" name="customerName" type="text" maxlength="200" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="customer-email">Customer email <span>Optional</span></label>
+            <input id="customer-email" name="customerEmail" type="email" maxlength="200" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false">
+          </div>
+          <div class="field">
+            <label for="reference">Reference <span>Optional</span></label>
+            <input id="reference" name="reference" type="text" maxlength="200" autocomplete="off">
+          </div>
+        </div>
+        <div class="action-row"><button class="button button-primary" id="gen-btn" type="submit">Generate Licenses</button></div>
+      </form>
+      <div id="gen-status" class="message" role="status" aria-live="polite" hidden></div>
+    </section>
+
+    <section class="surface" aria-labelledby="publish-heading">
+      <div class="section-heading">
+        <div><p class="eyebrow">Publish</p><h2 id="publish-heading">GitHub repository</h2></div>
+        <span class="privacy-chip">Token never saved</span>
+      </div>
+      <p class="section-copy">Use a fine-grained token restricted to <code>bukil/USBi</code> with <strong>Contents: Read and write</strong>.</p>
+      <div class="form-grid publish-grid">
+        <div class="field">
+          <label for="github-token">Fine-grained GitHub token</label>
+          <input id="github-token" name="githubToken" type="password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="github_pat_…">
+        </div>
+        <div class="field checkbox-field">
+          <span class="field-label">Automation</span>
+          <label class="checkbox-label" for="auto-publish"><input id="auto-publish" type="checkbox" checked> Publish after generation</label>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="button button-primary" id="publish-btn" type="button">Publish Current Allowlist</button>
+        <a class="button button-secondary" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create Token</a>
+      </div>
+      <div id="publish-status" class="message" role="status" aria-live="polite" hidden></div>
+    </section>
+
+    <section class="surface" aria-labelledby="results-heading">
+      <div class="section-heading"><div><p class="eyebrow">Generated now</p><h2 id="results-heading">Session results</h2></div></div>
+      <p class="section-copy">These plaintext keys exist only in this tab. Download the private CSV before clearing them.</p>
+      <div class="table-container"><table><caption class="visually-hidden">Generated license keys</caption><thead><tr><th scope="col">Product key</th><th scope="col">Hash</th><th scope="col">Customer</th><th scope="col">Action</th></tr></thead><tbody id="results-tbody"></tbody></table></div>
+      <div class="action-row" id="bulk-actions" hidden>
+        <button class="button button-secondary" id="copy-all-btn" type="button">Copy All</button>
+        <button class="button button-secondary" id="download-csv-btn" type="button">Download Private CSV</button>
+        <button class="button button-secondary" id="download-json-btn" type="button">Download JSON</button>
+        <button class="button button-destructive" id="clear-btn" type="button">Clear Plaintext Keys</button>
+      </div>
+    </section>
+
+    <section class="surface" aria-labelledby="manage-heading">
+      <div class="section-heading"><div><p class="eyebrow">Repository</p><h2 id="manage-heading">License management</h2></div></div>
+      <div class="table-container"><table><caption class="visually-hidden">Published and pending licenses</caption><thead><tr><th scope="col">Hash</th><th scope="col">Status</th><th scope="col">Customer</th><th scope="col">Email</th><th scope="col">Reference</th><th scope="col">Created</th><th scope="col">Actions</th></tr></thead><tbody id="allowlist-tbody"></tbody></table></div>
+      <div class="action-row"><button class="button button-secondary" id="download-json-btn-2" type="button">Download Backup JSON</button></div>
+    </section>
+
+    <section class="surface secondary-surface" aria-labelledby="import-heading">
+      <div class="section-heading"><div><p class="eyebrow">Recovery</p><h2 id="import-heading">Import a backup</h2></div></div>
+      <label class="import-zone" id="import-zone" for="import-file"><span aria-hidden="true">↓</span><strong>Choose licenses.json</strong><small>or drop it here · maximum 1 MB</small></label>
+      <input class="visually-hidden" id="import-file" name="importFile" type="file" accept=".json,application/json">
+      <div id="import-status" class="message" role="status" aria-live="polite" hidden></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>© 2026 EJEC</span><a href="tests/license-tests.html">Run diagnostics</a></footer>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -8,6 +8,14 @@
       "customerName": "Mukil",
       "customerEmail": "mukil@gmail.com",
       "reference": "initial-license"
+    },
+    {
+      "hash": "cb3e87bd6fa8c1d81936160b5ff4bb668463a16c1e34fec2a957501b6149009c",
+      "status": "active",
+      "createdAt": "2026-10-15T08:06:42.391Z",
+      "customerName": "mukil",
+      "customerEmail": "mukil@gmail.com",
+      "reference": "1"
     }
   ]
 }
