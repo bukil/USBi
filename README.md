@@ -1,16 +1,17 @@
-# React + Vite
+# USBi
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Applications & Tools
 
-Currently, two official plugins are available:
+- [EJEC License Generator](https://bukil.github.io/USBi/ejec-license/) — Static, dependency-free license generator and management portal for the EJEC macOS application.
+- Direct path: [`/ejec-license/`](file:///Users/mukil/USBi/ejec-license/index.html)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# To test the license generator locally
+cd ejec-license
+python3 -m http.server 8080
+# Open http://localhost:8080
+```
